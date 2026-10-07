@@ -10,18 +10,30 @@ export default function TypingArea({
   onProgressUpdate,
   onFinishRace,
 }) {
-  const [typedText, setTypedText] = useState('')
+  const [currentWordIdx, setCurrentWordIdx] = useState(0)
+  const [currentInput, setCurrentInput] = useState('')
   const [errorCount, setErrorCount] = useState(0)
+  const [totalKeypresses, setTotalKeypresses] = useState(0)
   const [startTime, setStartTime] = useState(null)
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef(null)
   const hasFinishedRef = useRef(false)
 
+  // Split quote into distinct words
+  const words = useMemo(() => {
+    return quoteText ? quoteText.trim().split(/\s+/) : []
+  }, [quoteText])
+
+  const targetWord = words[currentWordIdx] || ''
+  const isLastWord = currentWordIdx === words.length - 1
+
   // Reset state when quote or room status resets
   useEffect(() => {
     if (roomStatus === 'waiting' || roomStatus === 'countdown') {
-      setTypedText('')
+      setCurrentWordIdx(0)
+      setCurrentInput('')
       setErrorCount(0)
+      setTotalKeypresses(0)
       setStartTime(null)
       hasFinishedRef.current = false
     } else if (roomStatus === 'racing' && !startTime) {
@@ -33,7 +45,7 @@ export default function TypingArea({
     }
   }, [roomStatus, quoteText])
 
-  // Automatically focus input when race begins or on any keypress
+  // Focus input automatically whenever race is active
   useEffect(() => {
     if (roomStatus === 'racing') {
       if (inputRef.current) {
@@ -42,10 +54,12 @@ export default function TypingArea({
       }
 
       const handleGlobalKeyDown = (e) => {
-        // If race is active and user is typing, make sure input is focused
+        // If not already focused, refocus when pressing any typing key
         if (inputRef.current && document.activeElement !== inputRef.current) {
-          inputRef.current.focus()
-          setIsFocused(true)
+          if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+            inputRef.current.focus()
+            setIsFocused(true)
+          }
         }
       }
 
@@ -54,7 +68,7 @@ export default function TypingArea({
     }
   }, [roomStatus])
 
-  // Keep input focused when clicking anywhere inside typing area
+  // Click container to refocus input
   const handleContainerClick = () => {
     if (inputRef.current && roomStatus === 'racing') {
       inputRef.current.focus()
@@ -62,218 +76,272 @@ export default function TypingArea({
     }
   }
 
+  // Calculate total completed characters across words
+  const getCompletedCharsCount = (wordIdx, currentVal) => {
+    let count = 0
+    for (let i = 0; i < wordIdx; i++) {
+      count += words[i].length + 1 // +1 for the space
+    }
+    // Add correct characters typed in current word
+    if (targetWord && currentVal) {
+      for (let j = 0; j < currentVal.length; j++) {
+        if (currentVal[j] === targetWord[j]) {
+          count++
+        } else {
+          break
+        }
+      }
+    }
+    return count
+  }
+
   // Handle typing input
   const handleInputChange = (e) => {
     if (roomStatus !== 'racing' || hasFinishedRef.current) return
 
-    const newTyped = e.target.value
-    const prevLen = typedText.length
-    const currentLen = newTyped.length
-
-    // Keystroke sound feedback
-    if (currentLen > prevLen) {
-      const charTyped = newTyped[currentLen - 1]
-      const expectedChar = quoteText[currentLen - 1]
-
-      if (charTyped === expectedChar) {
-        playKeyClick(isMuted)
-      } else {
-        playKeyError(isMuted)
-        setErrorCount((prev) => prev + 1)
-      }
-    }
-
-    setTypedText(newTyped)
-
-    // Calculate correct chars count
-    let correctChars = 0
-    for (let i = 0; i < newTyped.length; i++) {
-      if (newTyped[i] === quoteText[i]) {
-        correctChars++
-      } else {
-        break
-      }
-    }
-
-    const totalChars = quoteText.length
-    const progress = Math.min(100, Math.round((correctChars / totalChars) * 100))
-
+    const val = e.target.value
     const now = Date.now()
     const activeStart = startTime || now
-    const elapsedMinutes = Math.max(0.01, (now - activeStart) / 60000)
-    const currentWpm = Math.round((correctChars / 5) / elapsedMinutes)
-    const totalTyped = newTyped.length + errorCount
-    const currentAccuracy = totalTyped > 0 ? Math.max(0, Math.round((correctChars / totalTyped) * 100)) : 100
+    setTotalKeypresses((prev) => prev + 1)
 
-    const isFinished = correctChars >= totalChars && newTyped.length >= totalChars
+    // Check if user hit spacebar to commit the word
+    if (val.endsWith(' ')) {
+      const trimmedVal = val.trim()
+
+      if (trimmedVal === targetWord) {
+        // Correct word completed!
+        playKeyClick(isMuted)
+
+        const nextWordIdx = currentWordIdx + 1
+        setCurrentWordIdx(nextWordIdx)
+        setCurrentInput('')
+
+        // Calculate progress
+        const completedChars = getCompletedCharsCount(nextWordIdx, '')
+        const totalChars = quoteText.length
+        const progress = Math.min(100, Math.round((completedChars / totalChars) * 100))
+
+        const elapsedMinutes = Math.max(0.01, (now - activeStart) / 60000)
+        const currentWpm = Math.round((completedChars / 5) / elapsedMinutes)
+        const accuracy = totalKeypresses > 0 ? Math.max(0, Math.round(((completedChars) / totalKeypresses) * 100)) : 100
+
+        if (onProgressUpdate) {
+          onProgressUpdate({
+            progress,
+            wpm: currentWpm,
+            accuracy,
+            typedChars: completedChars,
+            finished: false,
+          })
+        }
+        return
+      } else {
+        // Space pressed prematurely or with typo
+        playKeyError(isMuted)
+        setErrorCount((prev) => prev + 1)
+        setCurrentInput(val)
+        return
+      }
+    }
+
+    // Check if the final word was completed (no space required for last word)
+    if (isLastWord && val === targetWord) {
+      playKeyClick(isMuted)
+      setCurrentInput(val)
+      hasFinishedRef.current = true
+
+      const completedChars = quoteText.length
+      const elapsedMinutes = Math.max(0.01, (now - activeStart) / 60000)
+      const currentWpm = Math.round((completedChars / 5) / elapsedMinutes)
+      const accuracy = totalKeypresses > 0 ? Math.max(0, Math.round((completedChars / (totalKeypresses + 1)) * 100)) : 100
+
+      if (onProgressUpdate) {
+        onProgressUpdate({
+          progress: 100,
+          wpm: currentWpm,
+          accuracy,
+          typedChars: completedChars,
+          finished: true,
+        })
+      }
+
+      if (onFinishRace) {
+        onFinishRace({
+          wpm: currentWpm,
+          accuracy,
+          timeSeconds: ((now - activeStart) / 1000).toFixed(1),
+        })
+      }
+      return
+    }
+
+    // Normal keystroke within the current word
+    const isTypo = !targetWord.startsWith(val)
+    if (isTypo) {
+      playKeyError(isMuted)
+      setErrorCount((prev) => prev + 1)
+    } else {
+      playKeyClick(isMuted)
+    }
+
+    setCurrentInput(val)
+
+    // Update real-time progress & WPM
+    const completedChars = getCompletedCharsCount(currentWordIdx, val)
+    const totalChars = quoteText.length
+    const progress = Math.min(100, Math.round((completedChars / totalChars) * 100))
+    const elapsedMinutes = Math.max(0.01, (now - activeStart) / 60000)
+    const currentWpm = Math.round((completedChars / 5) / elapsedMinutes)
+    const accuracy = totalKeypresses > 0 ? Math.max(0, Math.round((completedChars / totalKeypresses) * 100)) : 100
 
     if (onProgressUpdate) {
       onProgressUpdate({
         progress,
         wpm: currentWpm,
-        accuracy: currentAccuracy,
-        typedChars: correctChars,
-        finished: isFinished,
+        accuracy,
+        typedChars: completedChars,
+        finished: false,
       })
-    }
-
-    if (isFinished && !hasFinishedRef.current) {
-      hasFinishedRef.current = true
-      if (onFinishRace) {
-        onFinishRace({
-          wpm: currentWpm,
-          accuracy: currentAccuracy,
-          timeSeconds: ((now - activeStart) / 1000).toFixed(1),
-        })
-      }
     }
   }
 
-  // Calculate live WPM & Accuracy for display
+  // Check if current input has a typo
+  const hasTypo = currentInput.length > 0 && !targetWord.startsWith(currentInput)
+
+  // Calculate live stats
   const liveStats = useMemo(() => {
-    if (!startTime || typedText.length === 0) {
-      return { wpm: 0, accuracy: 100 }
-    }
-    let correctChars = 0
-    for (let i = 0; i < typedText.length; i++) {
-      if (typedText[i] === quoteText[i]) {
-        correctChars++
-      } else {
-        break
-      }
-    }
+    if (!startTime) return { wpm: 0, accuracy: 100 }
+    const completedChars = getCompletedCharsCount(currentWordIdx, currentInput)
     const elapsedMinutes = Math.max(0.01, (Date.now() - startTime) / 60000)
-    const wpm = Math.round((correctChars / 5) / elapsedMinutes)
-    const totalTyped = typedText.length + errorCount
-    const accuracy = totalTyped > 0 ? Math.max(0, Math.round((correctChars / totalTyped) * 100)) : 100
+    const wpm = Math.round((completedChars / 5) / elapsedMinutes)
+    const accuracy = totalKeypresses > 0 ? Math.max(0, Math.round((completedChars / totalKeypresses) * 100)) : 100
     return { wpm, accuracy }
-  }, [typedText, errorCount, startTime, quoteText])
-
-  // Split quote into words for proper word-wrapping (Monkeytype style)
-  const words = useMemo(() => {
-    return quoteText.split(' ')
-  }, [quoteText])
-
-  let globalCharIndex = 0
+  }, [currentWordIdx, currentInput, startTime, totalKeypresses])
 
   return (
-    <div className="typing-section-wrapper" onClick={handleContainerClick}>
-      {/* Real-time HUD Bar */}
-      <div className="typing-hud-bar">
-        <div className="hud-metric-card speed-card">
-          <span className="metric-tag">SPEED</span>
-          <div className="metric-number">
-            {liveStats.wpm}
+    <div className="typeracer-arena-wrapper" onClick={handleContainerClick}>
+      {/* HUD Header Bar */}
+      <div className="typeracer-hud">
+        <div className="hud-metric-tile wpm-tile">
+          <span className="metric-caption">SPEED</span>
+          <div className="metric-val">
+            <strong>{liveStats.wpm}</strong>
             <small>WPM</small>
           </div>
         </div>
 
-        <div className="hud-metric-card acc-card">
-          <span className="metric-tag">ACCURACY</span>
-          <div className="metric-number">
-            {liveStats.accuracy}
+        <div className="hud-metric-tile acc-tile">
+          <span className="metric-caption">ACCURACY</span>
+          <div className="metric-val">
+            <strong>{liveStats.accuracy}</strong>
             <small>%</small>
           </div>
         </div>
 
-        <div className="hud-progress-container">
-          <div className="progress-label-row">
-            <span className="metric-tag">RACE COMPLETION</span>
-            <span className="progress-percentage">
-              {Math.min(100, Math.round((typedText.length / (quoteText.length || 1)) * 100))}%
+        <div className="hud-metric-tile progress-tile">
+          <div className="progress-text-row">
+            <span className="metric-caption">PROGRESS</span>
+            <span className="word-count-tag">
+              Word {Math.min(currentWordIdx + 1, words.length)} of {words.length}
             </span>
           </div>
-          <div className="hud-track-bar">
+          <div className="hud-progress-track">
             <div
-              className="hud-track-fill"
+              className="hud-progress-bar-fill"
               style={{
-                width: `${Math.min(100, (typedText.length / (quoteText.length || 1)) * 100)}%`,
+                width: `${Math.min(
+                  100,
+                  Math.round((getCompletedCharsCount(currentWordIdx, currentInput) / (quoteText.length || 1)) * 100)
+                )}%`,
               }}
             ></div>
           </div>
         </div>
 
-        <div className="hud-status-badge">
-          {roomStatus === 'waiting' && <span className="status-pill pill-waiting">IN LOBBY</span>}
-          {roomStatus === 'countdown' && <span className="status-pill pill-countdown">GET READY...</span>}
-          {roomStatus === 'racing' && <span className="status-pill pill-racing">🔥 RACING ACTIVE</span>}
-          {roomStatus === 'finished' && <span className="status-pill pill-finished">🏁 FINISHED</span>}
+        <div className="hud-status-chip">
+          {roomStatus === 'waiting' && <span className="chip waiting">IN LOBBY</span>}
+          {roomStatus === 'countdown' && <span className="chip countdown">STARTING...</span>}
+          {roomStatus === 'racing' && <span className="chip racing">🔥 RACING</span>}
+          {roomStatus === 'finished' && <span className="chip finished">🏁 FINISHED</span>}
         </div>
       </div>
 
-      {/* Main Interactive Typing Arena */}
-      <div className={`typing-arena-card ${roomStatus === 'racing' ? 'active-race' : ''}`}>
-        {/* Invisible input capturing raw keyboard events without rendering any visible box */}
+      {/* Target Quote Display Box */}
+      <div className="typeracer-quote-box">
+        <div className="quote-text-stream">
+          {words.map((word, idx) => {
+            const isCompleted = idx < currentWordIdx
+            const isCurrent = idx === currentWordIdx
+            const isUpcoming = idx > currentWordIdx
+
+            return (
+              <span
+                key={idx}
+                className={`stream-word ${
+                  isCompleted ? 'word-completed' : ''
+                } ${isCurrent ? 'word-current' : ''} ${isUpcoming ? 'word-upcoming' : ''}`}
+              >
+                {/* Render current word with character-level accuracy */}
+                {isCurrent ? (
+                  <span className="current-word-wrapper">
+                    {word.split('').map((char, charIndex) => {
+                      let charClass = 'char-pending'
+                      if (charIndex < currentInput.length) {
+                        charClass = currentInput[charIndex] === char ? 'char-correct' : 'char-error'
+                      }
+                      return (
+                        <span key={charIndex} className={`active-char ${charClass}`}>
+                          {char}
+                        </span>
+                      )
+                    })}
+                  </span>
+                ) : (
+                  word
+                )}
+                {' '}
+              </span>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Prominent, Dedicated TypeRacer Input Box */}
+      <div className={`typeracer-input-container ${hasTypo ? 'state-error' : 'state-normal'}`}>
+        <div className="input-prefix-icon">
+          {hasTypo ? '⚠️' : '⌨️'}
+        </div>
+
         <input
           ref={inputRef}
           type="text"
-          className="stealth-input"
-          value={typedText}
+          className={`typeracer-input-field ${hasTypo ? 'input-error' : ''}`}
+          value={currentInput}
           onChange={handleInputChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={roomStatus !== 'racing' || hasFinishedRef.current}
+          placeholder={
+            roomStatus === 'racing'
+              ? `Type "${targetWord}" then press space...`
+              : roomStatus === 'countdown'
+              ? 'Get ready to type...'
+              : 'Waiting for race start...'
+          }
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
         />
 
-        {/* Word-by-Word & Character-by-Character Display with Giant Crisp Typography */}
-        <div className="words-display-area">
-          {words.map((word, wordIdx) => {
-            const isLastWord = wordIdx === words.length - 1
-            const fullWordWithSpace = isLastWord ? word : word + ' '
-
-            return (
-              <span key={wordIdx} className="word-cluster">
-                {fullWordWithSpace.split('').map((char) => {
-                  const charIdx = globalCharIndex++
-                  const isCurrent = charIdx === typedText.length
-                  let charStatus = 'untyped'
-
-                  if (charIdx < typedText.length) {
-                    charStatus = typedText[charIdx] === char ? 'correct' : 'incorrect'
-                  }
-
-                  const isSpace = char === ' '
-
-                  return (
-                    <span
-                      key={charIdx}
-                      className={`target-char char-${charStatus} ${isCurrent ? 'char-target-active' : ''} ${
-                        isSpace ? 'char-space' : ''
-                      }`}
-                    >
-                      {/* Active Cursor Caret */}
-                      {isCurrent && roomStatus === 'racing' && (
-                        <span className="live-typing-caret"></span>
-                      )}
-                      {isSpace ? '·' : char}
-                    </span>
-                  )
-                })}
-              </span>
-            )
-          })}
-        </div>
-
-        {/* Dynamic Interactive Hint */}
-        <div className="typing-arena-footer">
-          <div className="footer-left-hint">
-            {roomStatus === 'racing' && !isFocused ? (
-              <span className="click-to-focus-badge">⚠️ Click anywhere to focus & continue typing!</span>
-            ) : roomStatus === 'racing' ? (
-              <span className="racing-tip">⚡ Green = Correct · Red = Typo · Target letter is highlighted</span>
-            ) : roomStatus === 'countdown' ? (
-              <span className="countdown-tip">🚦 Hands on the keyboard! Race starts in seconds...</span>
-            ) : (
-              <span className="waiting-tip">⏳ Waiting for race countdown to start...</span>
-            )}
-          </div>
-          <div className="footer-stats-tag">
-            {typedText.length} / {quoteText.length} characters
-          </div>
+        <div className="input-hint-badge">
+          {hasTypo ? (
+            <span className="hint-fix-typo">Press Backspace to fix typo!</span>
+          ) : isLastWord ? (
+            <span className="hint-finish">Final word! Type it to cross the finish line!</span>
+          ) : (
+            <span className="hint-space">Hit [SPACE] after each word</span>
+          )}
         </div>
       </div>
     </div>

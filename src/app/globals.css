@@ -1238,40 +1238,40 @@ button, input {
 }
 
 /* ==========================================================================
-   TYPING ENGINE (GIANT TARGET LETTERS & REALTIME NEON TRACKING)
+   TYPERACER & NITROTYPE DEDICATED TYPING ENGINE
    ========================================================================== */
-.typing-section-wrapper {
+.typeracer-arena-wrapper {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-/* Real-Time Stats HUD Bar */
-.typing-hud-bar {
+/* HUD Metrics Header */
+.typeracer-hud {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
 }
 
-.hud-metric-card {
+.hud-metric-tile {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-radius: 14px;
-  padding: 0.75rem 1.35rem;
+  padding: 0.75rem 1.4rem;
   min-width: 120px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
-.speed-card {
-  border-color: rgba(0, 242, 254, 0.3);
+.wpm-tile {
+  border-color: rgba(0, 242, 254, 0.35);
 }
 
-.acc-card {
-  border-color: rgba(16, 185, 129, 0.3);
+.acc-tile {
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
-.metric-tag {
+.metric-caption {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 1.5px;
@@ -1280,65 +1280,59 @@ button, input {
   margin-bottom: 0.15rem;
 }
 
-.metric-number {
+.metric-val {
   font-family: var(--font-mono);
   font-size: 1.85rem;
-  font-weight: 900;
   line-height: 1.1;
   display: flex;
   align-items: baseline;
   gap: 0.3rem;
 }
 
-.speed-card .metric-number {
+.wpm-tile .metric-val strong {
   color: var(--accent-cyan);
-  text-shadow: 0 0 14px rgba(0, 242, 254, 0.4);
+  text-shadow: 0 0 14px rgba(0, 242, 254, 0.45);
 }
 
-.acc-card .metric-number {
+.acc-tile .metric-val strong {
   color: var(--accent-emerald);
-  text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+  text-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
 }
 
-.metric-number small {
+.metric-val small {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 700;
 }
 
-/* Progress Container */
-.hud-progress-container {
+/* Progress Tile */
+.progress-tile {
   flex: 1;
-  min-width: 200px;
-  background: var(--bg-card);
-  border: 1px solid var(--bg-card-border);
-  border-radius: 14px;
-  padding: 0.75rem 1.25rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  min-width: 220px;
 }
 
-.progress-label-row {
+.progress-text-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
 }
 
-.progress-percentage {
+.word-count-tag {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: var(--accent-cyan);
 }
 
-.hud-track-bar {
+.hud-progress-track {
   height: 10px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 9999px;
   overflow: hidden;
 }
 
-.hud-track-fill {
+.hud-progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #10b981, #00f2fe);
   border-radius: 9999px;
@@ -1346,13 +1340,13 @@ button, input {
   box-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
 }
 
-/* Status Pill */
-.hud-status-badge {
+/* Status Chip */
+.hud-status-chip {
   display: flex;
   align-items: center;
 }
 
-.status-pill {
+.hud-status-chip .chip {
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1360,180 +1354,198 @@ button, input {
   border-radius: 9999px;
 }
 
-.pill-waiting {
+.hud-status-chip .chip.waiting {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-muted);
 }
 
-.pill-countdown {
+.hud-status-chip .chip.countdown {
   background: rgba(245, 158, 11, 0.2);
   color: var(--accent-amber);
-  animation: pulsePill 0.6s infinite alternate;
+  animation: pulseChip 0.6s infinite alternate;
 }
 
-.pill-racing {
+.hud-status-chip .chip.racing {
   background: rgba(0, 242, 254, 0.15);
   border: 1px solid rgba(0, 242, 254, 0.4);
   color: var(--accent-cyan);
   box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
 }
 
-.pill-finished {
+.hud-status-chip .chip.finished {
   background: rgba(16, 185, 129, 0.2);
   color: var(--accent-emerald);
 }
 
-@keyframes pulsePill {
+@keyframes pulseChip {
   from { opacity: 0.7; }
   to { opacity: 1; }
 }
 
-/* Typing Arena Card */
-.typing-arena-card {
+/* ==========================================================================
+   TARGET QUOTE DISPLAY BOX
+   ========================================================================== */
+.typeracer-quote-box {
   background: var(--bg-card);
   border: 1.5px solid var(--bg-card-border);
   border-radius: 20px;
-  padding: 2.5rem 2.25rem 2rem;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
-  position: relative;
-  cursor: text;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.typing-arena-card.active-race {
-  border-color: rgba(0, 242, 254, 0.35);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 242, 254, 0.08);
-}
-
-/* Stealth Input: Absolutely invisible, ZERO white box */
-.stealth-input {
-  position: absolute !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  left: -9999px !important;
-  top: -9999px !important;
-  border: none !important;
-  background: transparent !important;
-}
-
-/* GIANT WORDS DISPLAY AREA */
-.words-display-area {
-  font-family: var(--font-mono);
-  font-size: clamp(1.85rem, 3.5vw, 2.45rem); /* GIANT CRISP LETTERS */
-  line-height: 2.2;
-  letter-spacing: 1px;
+  padding: 2.25rem 2.25rem;
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.5);
   user-select: none;
+}
+
+.quote-text-stream {
+  font-family: var(--font-mono);
+  font-size: clamp(1.45rem, 2.7vw, 1.95rem);
+  line-height: 2.1;
+  letter-spacing: 0.5px;
   word-break: break-word;
-  margin-bottom: 2rem;
 }
 
-.word-cluster {
+.stream-word {
   display: inline-block;
-  white-space: nowrap;
+  margin-right: 0.15em;
+  transition: all 0.1s ease;
 }
 
-/* TARGET CHARACTERS */
-.target-char {
-  position: relative;
-  display: inline-block;
-  transition: color 0.06s ease, background-color 0.06s ease, transform 0.06s ease;
-  padding: 0 1px;
-}
-
-/* 1. Untyped / Upcoming: Muted slate, clean and readable */
-.target-char.char-untyped {
-  color: #4b5a70;
-}
-
-/* 2. Correct: VIBRANT NEON EMERALD GREEN */
-.target-char.char-correct {
+/* 1. Completed Word: Solid Neon Green */
+.stream-word.word-completed {
   color: #00ff88 !important;
-  text-shadow: 0 0 14px rgba(0, 255, 136, 0.55), 0 0 28px rgba(0, 255, 136, 0.3);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.45);
   font-weight: 700;
 }
 
-/* 3. Incorrect / Typo: VIBRANT RED with soft highlight box */
-.target-char.char-incorrect {
+/* 2. Upcoming Word: Clear Readable Slate */
+.stream-word.word-upcoming {
+  color: #64748b;
+}
+
+/* 3. Active Current Word: Glowing Elevated Pill */
+.stream-word.word-current {
+  background: rgba(0, 242, 254, 0.12);
+  border: 1.5px solid rgba(0, 242, 254, 0.55);
+  border-radius: 8px;
+  padding: 0.1rem 0.55rem;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+}
+
+.current-word-wrapper {
+  display: inline-block;
+}
+
+.active-char {
+  display: inline-block;
+  transition: color 0.08s ease, background 0.08s ease;
+}
+
+.active-char.char-correct {
+  color: #00ff88 !important;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+}
+
+.active-char.char-error {
   color: #ff3366 !important;
-  background: rgba(255, 51, 102, 0.28);
-  border-radius: 4px;
-  text-shadow: 0 0 10px rgba(255, 51, 102, 0.6);
+  background: rgba(255, 51, 102, 0.35);
+  border-radius: 3px;
+  font-weight: 800;
   text-decoration: underline wavy #ff3366;
 }
 
-/* 4. Currently Targeted Active Character: Glowing & Big */
-.target-char.char-target-active {
+.active-char.char-pending {
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(0, 242, 254, 0.9), 0 0 22px rgba(0, 242, 254, 0.6);
-  font-weight: 900;
-}
-
-.target-char.char-space {
-  opacity: 0.3;
-  font-size: 0.85em;
-  padding: 0 2px;
-}
-
-/* Live Typing Caret (Smooth Neon Cursor) */
-.live-typing-caret {
-  position: absolute;
-  left: -2px;
-  top: 15%;
-  bottom: 15%;
-  width: 3.5px;
-  background: var(--accent-cyan);
-  box-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-cyan);
-  border-radius: 2px;
-  animation: pulseCaret 0.85s infinite ease-in-out;
-  pointer-events: none;
-}
-
-@keyframes pulseCaret {
-  0%, 100% { opacity: 1; transform: scaleY(1); }
-  50% { opacity: 0.25; transform: scaleY(0.92); }
-}
-
-/* Typing Arena Footer & Hints */
-.typing-arena-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--bg-card-border);
-  font-size: 0.85rem;
-}
-
-.click-to-focus-badge {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: var(--accent-amber);
-  padding: 0.35rem 0.85rem;
-  border-radius: 9999px;
-  font-weight: 800;
-  animation: pulsePill 0.8s infinite alternate;
-}
-
-.racing-tip {
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.countdown-tip {
-  color: var(--accent-amber);
   font-weight: 700;
 }
 
-.waiting-tip {
-  color: var(--text-muted);
+/* ==========================================================================
+   PROMINENT DEDICATED TYPERACER INPUT BOX
+   ========================================================================== */
+.typeracer-input-container {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--bg-card-border);
+  border-radius: 18px;
+  padding: 0.65rem 1.25rem;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  gap: 1rem;
 }
 
-.footer-stats-tag {
+.typeracer-input-container.state-normal {
+  border-color: rgba(0, 242, 254, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55), 0 0 25px rgba(0, 242, 254, 0.2);
+}
+
+.typeracer-input-container.state-error {
+  border-color: #ff3366 !important;
+  background: rgba(255, 51, 102, 0.08) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55), 0 0 30px rgba(255, 51, 102, 0.35) !important;
+}
+
+.input-prefix-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.typeracer-input-field {
+  flex: 1;
+  height: 58px;
+  background: transparent;
+  border: none;
+  outline: none;
   font-family: var(--font-mono);
-  color: var(--text-muted);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.typeracer-input-field::placeholder {
+  color: #64748b;
+  font-weight: 500;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.typeracer-input-field.input-error {
+  color: #ff3366 !important;
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.6);
+}
+
+.input-hint-badge {
+  flex-shrink: 0;
+}
+
+.hint-fix-typo {
+  background: rgba(255, 51, 102, 0.22);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  color: #ff809b;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.hint-space {
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: var(--accent-cyan);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.hint-finish {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: var(--accent-emerald);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
 }
 
 /* ==========================================================================
