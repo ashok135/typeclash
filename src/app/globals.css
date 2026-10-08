@@ -419,6 +419,14 @@ button, input {
   line-height: 1;
 }
 
+.car-preview-slot {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
 .car-name {
   font-size: 0.78rem;
   font-weight: 700;
@@ -999,243 +1007,789 @@ button, input {
   gap: 2rem;
 }
 
-.racetrack-container {
-  background: var(--bg-card);
-  border: 1px solid var(--bg-card-border);
-  border-radius: 18px;
-  padding: 1.75rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+/* ==========================================================================
+   RACE TRACK & TOP-DOWN RACING ARENA (NITRO SPEEDWAY)
+   ========================================================================== */
+.racetrack-super-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #090a0f;
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: 20px;
+  padding: 1.25rem;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 242, 254, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
-.track-header {
+/* 1. Track Top HUD Bar */
+.track-hud-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.35rem;
+  padding: 0.25rem 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.th-left {
+.hud-circuit-info {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
-.th-flag {
-  font-size: 1.35rem;
-}
-
-.th-title {
-  font-weight: 800;
-  font-size: 1rem;
+.circuit-badge {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
   letter-spacing: 1px;
+}
+
+.circuit-title {
   color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.th-legend {
+.hud-race-indicators {
   display: flex;
-  gap: 1.25rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  align-items: center;
+  gap: 0.85rem;
 }
 
-.legend-item {
+.hud-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
+.live-tag {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.live-blink {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
   border-radius: 50%;
+  box-shadow: 0 0 10px #10b981;
+  animation: livePulse 1.2s infinite ease-in-out;
 }
 
-.dot.you {
-  background: var(--accent-cyan);
-  box-shadow: 0 0 8px var(--accent-cyan);
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
 }
 
-.dot.other {
-  background: var(--text-muted);
+/* 2. Main Asphalt Dragway Arena */
+.asphalt-dragway {
+  position: relative;
+  background: #10121a;
+  border-radius: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+  padding: 0.25rem 0;
 }
 
-.track-lanes {
+/* Crash Barriers & Hazard Curbs */
+.track-guardrail {
+  height: 16px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  z-index: 4;
 }
 
-.track-lane {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--bg-card-border);
-  border-radius: 14px;
-  padding: 0.95rem 1.15rem;
-  transition: all 0.25s ease;
+.guardrail-top {
+  border-bottom: 2px solid #222533;
 }
 
-.track-lane.lane-you {
-  background: rgba(0, 242, 254, 0.05);
-  border-color: rgba(0, 242, 254, 0.35);
+.guardrail-bottom {
+  border-top: 2px solid #222533;
 }
 
-.lane-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.lane-player {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.lane-num {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.lane-avatar {
-  font-size: 1.35rem;
-}
-
-.lane-name {
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: #fff;
-}
-
-.you-badge {
-  color: var(--accent-cyan);
-  font-size: 0.75rem;
-  margin-left: 0.25rem;
-}
-
-.lane-stats {
-  display: flex;
-  align-items: center;
-  gap: 1.15rem;
-}
-
-.lane-wpm {
-  font-family: var(--font-mono);
-  font-weight: 900;
-  font-size: 1rem;
-}
-
-.lane-wpm small {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.lane-acc {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.finish-rank-tag {
-  background: rgba(245, 158, 11, 0.2);
-  color: var(--accent-amber);
-  font-size: 0.72rem;
-  font-weight: 900;
-  padding: 0.2rem 0.55rem;
-  border-radius: 5px;
-}
-
-.lane-track-strip {
-  position: relative;
-  height: 42px;
-  display: flex;
-  align-items: center;
-}
-
-.lane-asphalt {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 7px;
-  overflow: hidden;
-}
-
-.asphalt-dashes {
+.curb-stripes {
+  height: 8px;
   width: 100%;
-  height: 100%;
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.16) 0,
-    rgba(255, 255, 255, 0.16) 12px,
-    transparent 12px,
-    transparent 24px
+  background: repeating-linear-gradient(
+    -45deg,
+    #ef4444 0,
+    #ef4444 14px,
+    #ffffff 14px,
+    #ffffff 28px
   );
+  opacity: 0.9;
 }
 
-.lane-car-slider {
+.guardrail-posts {
+  height: 8px;
+  width: 100%;
+  background: linear-gradient(180deg, #475569, #1e293b);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* OVERHEAD "NITRO CITY" SPEED ARCH (Iconic glow gate from screenshot) */
+.overhead-nitro-arch {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-  z-index: 5;
-}
-
-.lane-vehicle-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  transform: translateX(-50%);
-}
-
-.nitro-boost-trail {
-  position: absolute;
-  right: 85%;
-  width: 36px;
-  height: 9px;
-  background: linear-gradient(90deg, transparent, #ff3366, #f59e0b);
-  border-radius: 4px;
-  filter: blur(1px);
-  animation: nitroFlicker 0.15s infinite alternate;
-}
-
-@keyframes nitroFlicker {
-  0% { transform: scaleX(0.8); opacity: 0.7; }
-  100% { transform: scaleX(1.25); opacity: 1; }
-}
-
-.car-icon-display {
-  font-size: 1.75rem;
-  line-height: 1;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
-}
-
-.lane-finish-line {
-  position: absolute;
-  right: 0;
   top: 0;
   bottom: 0;
-  width: 24px;
+  left: 54%;
+  width: 80px;
+  pointer-events: none;
+  z-index: 15;
   display: flex;
+  justify-content: center;
+}
+
+.arch-glow-column {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 254, 0.04) 0%,
+    rgba(0, 242, 254, 0.22) 50%,
+    rgba(0, 242, 254, 0.04) 100%
+  );
+  border-left: 2px solid rgba(0, 242, 254, 0.5);
+  border-right: 2px solid rgba(0, 242, 254, 0.5);
+  box-shadow: 0 0 35px rgba(0, 242, 254, 0.35);
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.finish-line-strip {
-  width: 6px;
+.arch-neon-sign {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-family: var(--font-mono);
+  font-weight: 900;
+  letter-spacing: 5px;
+  color: #ffffff;
+  text-shadow: 0 0 12px #00f2fe, 0 0 25px #00f2fe, 0 0 40px #0284c7;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.85;
+}
+
+.arch-text {
+  font-size: 1.15rem;
+}
+
+.arch-sub {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  color: #38bdf8;
+}
+
+.arch-hazard-stripes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 12px,
+    rgba(0, 242, 254, 0.06) 12px,
+    rgba(0, 242, 254, 0.06) 24px
+  );
+}
+
+.arch-laser-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 15px #00f2fe, 0 0 30px #00f2fe;
+}
+
+/* Highway Lanes Stack */
+.highway-lanes-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 900px;
+}
+
+.highway-lane {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 82px;
+  background: #141722;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.12);
+  transition: background 0.25s ease;
+}
+
+.highway-lane:last-child {
+  border-bottom: none;
+}
+
+.highway-lane.user-lane {
+  background: #161b2a;
+}
+
+.highway-lane.lane-complete {
+  background: rgba(16, 185, 129, 0.04);
+}
+
+/* A. LEFT-SIDE CHEVRON DRIVER TAG (Nitro Type HUD style) */
+.driver-chevron-tag {
+  width: 220px;
+  height: 64px;
+  background: linear-gradient(135deg, rgba(30, 34, 48, 0.95), rgba(18, 21, 30, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem 0 0.75rem;
+  position: relative;
+  z-index: 12;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.user-lane .driver-chevron-tag {
+  background: linear-gradient(135deg, rgba(14, 45, 66, 0.95), rgba(12, 28, 42, 0.95));
+  border-color: rgba(0, 242, 254, 0.4);
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.18);
+}
+
+.tag-rank-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.6rem;
+  flex-shrink: 0;
+}
+
+.rank-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--accent-amber);
+}
+
+.tag-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.driver-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.driver-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.you-pill {
+  background: var(--accent-cyan);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.bot-pill {
+  background: rgba(176, 38, 255, 0.3);
+  color: #d946ef;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.driver-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-mono);
+}
+
+.driver-wpm {
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.driver-wpm small {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.driver-acc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.finished-tag {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+/* Chevron Arrow Point on Tag */
+.chevron-arrow-point {
+  width: 0;
+  height: 0;
+  border-top: 32px solid transparent;
+  border-bottom: 32px solid transparent;
+  border-left: 14px solid rgba(18, 21, 30, 0.95);
+  position: absolute;
+  right: -14px;
+  top: 0;
+  filter: drop-shadow(3px 0 3px rgba(0, 0, 0, 0.4));
+}
+
+.user-lane .chevron-arrow-point {
+  border-left-color: rgba(12, 28, 42, 0.95);
+}
+
+/* B. PHYSICAL TARMAC SURFACE */
+.lane-tarmac {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+/* Road Texture & Moving Dashed Markings */
+.tarmac-road-markings {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 16px 16px;
+  pointer-events: none;
+}
+
+.center-dash-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.25) 0,
+    rgba(255, 255, 255, 0.25) 24px,
+    transparent 24px,
+    transparent 48px
+  );
+  transform: translateY(-50%);
+}
+
+.road-moving .center-dash-line {
+  animation: roadDashesScroll linear infinite;
+}
+
+@keyframes roadDashesScroll {
+  0% { background-position-x: 0; }
+  100% { background-position-x: -48px; }
+}
+
+/* START LINE */
+.lane-start-line {
+  position: absolute;
+  left: 4%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  opacity: 0.6;
+}
+
+/* FINISH GATE */
+.lane-finish-gate {
+  position: absolute;
+  left: 88%;
+  top: 0;
+  bottom: 0;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+}
+
+.checkered-stripe {
+  width: 10px;
   height: 100%;
   background: repeating-linear-gradient(
     0deg,
     #fff 0,
-    #fff 6px,
-    #000 6px,
-    #000 12px
+    #fff 8px,
+    #000 8px,
+    #000 16px
   );
-  border-radius: 2px;
+  border-left: 2px solid #ef4444;
+  border-right: 2px solid #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
 }
+
+.finish-checkered-flag {
+  position: absolute;
+  font-size: 1.1rem;
+  top: 4px;
+}
+
+/* C. THE RACING VEHICLE TRACKER ON TRACK */
+.lane-vehicle-tracker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  will-change: left;
+}
+
+.vehicle-you {
+  z-index: 12;
+}
+
+/* GLOWING CHEVRON "YOU" INDICATOR (From Nitro Type screenshot!) */
+.user-follow-indicator {
+  position: absolute;
+  right: 105%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  pointer-events: none;
+  animation: youIndicatorBob 0.8s infinite alternate ease-in-out;
+  white-space: nowrap;
+}
+
+.chevrons-arrow {
+  display: flex;
+  color: #00f2fe;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe;
+  letter-spacing: -3px;
+}
+
+.chev-1 { opacity: 0.4; }
+.chev-2 { opacity: 0.7; }
+.chev-3 { opacity: 1; }
+
+.you-callout {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 12px #00f2fe, 0 0 24px #00f2fe, 0 2px 4px #000;
+  letter-spacing: 1.5px;
+  margin-left: 0.25rem;
+}
+
+@keyframes youIndicatorBob {
+  0% { transform: translateY(-50%) translateX(0); }
+  100% { transform: translateY(-50%) translateX(-6px); }
+}
+
+/* Floating Distance Marker */
+.car-distance-marker {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--accent-cyan);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   TOP-DOWN RACE CAR GRAPHICS & DYNAMIC NITRO FLAMES
+   ========================================================================== */
+.top-down-car-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+}
+
+/* Engine Vibration / Rumble when racing */
+.top-down-car-container.car-typing,
+.top-down-car-container.fast-nitro {
+  animation: engineRumble 0.06s infinite alternate ease-in-out;
+}
+
+@keyframes engineRumble {
+  0% { transform: translateY(-0.8px); }
+  100% { transform: translateY(0.8px); }
+}
+
+.car-svg-chassis {
+  position: relative;
+  z-index: 5;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+}
+
+/* Headlight Light Cones */
+.car-headlight-beams {
+  position: absolute;
+  left: 95px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.light-cone {
+  position: absolute;
+  width: 90px;
+  height: 24px;
+  background: linear-gradient(
+    90deg,
+    rgba(254, 240, 138, 0.5) 0%,
+    rgba(254, 240, 138, 0.15) 50%,
+    transparent 100%
+  );
+  filter: blur(4px);
+  border-radius: 50%;
+}
+
+.cone-top {
+  top: -16px;
+  transform: rotate(-4deg);
+}
+
+.cone-bottom {
+  bottom: -16px;
+  transform: rotate(4deg);
+}
+
+/* NITRO JET FLAMES & SPARKS (Left of Car Chassis) */
+.car-exhaust-flames {
+  position: absolute;
+  right: 98px;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: right center;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.flame-plume {
+  position: absolute;
+  right: 0;
+  width: 50px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  animation: jetFlamePulsing 0.08s infinite alternate ease-in-out;
+}
+
+.plume-top {
+  top: -18px;
+}
+
+.plume-bottom {
+  bottom: -18px;
+}
+
+.flame-outer {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    -90deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    #f59e0b 25%,
+    #ef4444 60%,
+    transparent 100%
+  );
+  border-radius: 50% 0 0 50%;
+  filter: blur(1.5px) drop-shadow(0 0 8px #f59e0b);
+}
+
+.flame-core {
+  position: absolute;
+  right: 0;
+  width: 55%;
+  height: 60%;
+  background: linear-gradient(
+    -90deg,
+    #ffffff 0%,
+    #fef08a 60%,
+    transparent 100%
+  );
+  border-radius: 50% 0 0 50%;
+  filter: blur(0.5px);
+  z-index: 2;
+}
+
+@keyframes jetFlamePulsing {
+  0% { transform: scaleX(0.85) scaleY(0.9); opacity: 0.85; }
+  100% { transform: scaleX(1.25) scaleY(1.15); opacity: 1; }
+}
+
+/* SUPER NITRO (70+ WPM) Visual Boost */
+.super-nitro .flame-outer {
+  background: linear-gradient(
+    -90deg,
+    #ffffff 0%,
+    #00f2fe 30%,
+    #4facfe 70%,
+    transparent 100%
+  );
+  filter: blur(1px) drop-shadow(0 0 16px #00f2fe);
+}
+
+.super-nitro .flame-plume {
+  width: 76px;
+  height: 18px;
+}
+
+/* Electric Lightning Arcs */
+.electric-lightning-wrapper {
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 140px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.lightning-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lightning-bolt {
+  filter: drop-shadow(0 0 6px #00f2fe);
+  animation: lightningFlicker 0.12s infinite steps(2);
+}
+
+@keyframes lightningFlicker {
+  0% { opacity: 0.2; transform: translateY(-1px); }
+  50% { opacity: 1; transform: translateY(1px); }
+  100% { opacity: 0.5; }
+}
+
+/* Tire Smoke Particles */
+.tire-smoke-emitter {
+  position: absolute;
+  right: 75px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.smoke-puff {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  filter: blur(4px);
+  animation: smokeDrift 0.35s infinite ease-out;
+}
+
+.puff-1 { top: -14px; }
+.puff-2 { bottom: -14px; animation-delay: 0.15s; }
+
+@keyframes smokeDrift {
+  0% { transform: translateX(0) scale(0.6); opacity: 0.8; }
+  100% { transform: translateX(-35px) scale(1.6); opacity: 0; }
+}
+
+/* Floating Speed Tag Attached to Car */
+.car-speed-floating-tag {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 12, 18, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.1rem 0.4rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 14;
+}
+
+.speed-num {
+  font-size: 0.85rem;
+}
+
+.speed-unit {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
 
 /* ==========================================================================
    TYPERACER & NITROTYPE DEDICATED TYPING ENGINE

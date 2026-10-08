@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { CARS } from '@/lib/cars'
+import TopDownCar from './TopDownCar'
 
 export default function Lobby({
   playerName,
@@ -101,7 +102,14 @@ export default function Lobby({
                       '--car-glow': car.glow,
                     }}
                   >
-                    <div className="car-symbol">{car.symbol}</div>
+                    <div className="car-preview-slot">
+                      <TopDownCar
+                        car={car}
+                        wpm={isSelected ? 65 : 0}
+                        isTyping={isSelected}
+                        scale={0.65}
+                      />
+                    </div>
                     <div className="car-name">{car.name}</div>
                     {isSelected && <span className="car-active-dot"></span>}
                   </button>

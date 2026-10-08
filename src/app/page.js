@@ -32,7 +32,9 @@ export default function Home() {
 
   // Countdown & Race state
   const [countdownNumber, setCountdownNumber] = useState(null)
+  const [isTyping, setIsTyping] = useState(false)
   const countdownIntervalRef = useRef(null)
+  const typingTimeoutRef = useRef(null)
   const lastNitroWpmRef = useRef(0)
   const hasPlayedVictoryRef = useRef(false)
 
@@ -380,6 +382,30 @@ export default function Home() {
   const handleProgressUpdate = async ({ progress, wpm, accuracy, typedChars }) => {
     if (!roomCode || !currentUserId || room?.status !== 'racing') return
 
+    // Instant zero-latency optimistic local update for current player
+    setIsTyping(true)
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false)
+    }, 800)
+
+    setRoom((prev) => {
+      if (!prev) return prev
+      const updatedPlayers = prev.players.map((p) => {
+        if (p.id === currentUserId) {
+          return {
+            ...p,
+            progress,
+            wpm,
+            accuracy,
+            typedChars,
+          }
+        }
+        return p
+      })
+      return { ...prev, players: updatedPlayers }
+    })
+
     // Sound effect: Nitro burst when breaking 75 WPM
     if (wpm >= 75 && lastNitroWpmRef.current < 75 && !isMuted) {
       playNitroBoost()
@@ -512,6 +538,7 @@ export default function Home() {
               players={room.players}
               currentUserId={currentUserId}
               isRacing={isRacing}
+              isTyping={isTyping}
             />
 
             {/* Typing Test Area */}
