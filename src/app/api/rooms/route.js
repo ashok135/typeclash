@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createRoom } from '@/lib/roomStore'
 
+
 export async function POST(request) {
   try {
     const body = await request.json().catch(() => ({}))
@@ -12,11 +13,18 @@ export async function POST(request) {
       quoteDifficulty: quoteDifficulty || difficulty,
     })
 
-    return NextResponse.json({
-      success: true,
-      room,
-      player: hostPlayer,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        room,
+        player: hostPlayer,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      }
+    )
   } catch (error) {
     console.error('Failed to create room:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })

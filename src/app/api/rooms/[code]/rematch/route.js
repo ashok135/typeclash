@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server'
 import { rematchRoom } from '@/lib/roomStore'
 
+
 export async function POST(request, { params }) {
   try {
     const { code } = await params
     const updatedRoom = rematchRoom(code)
 
     if (!updatedRoom) {
-      return NextResponse.json({ success: false, error: 'Room not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Room not found' },
+        { status: 404, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      )
     }
 
-    return NextResponse.json({ success: true, room: updatedRoom })
+    return NextResponse.json(
+      { success: true, room: updatedRoom },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    )
   } catch (error) {
     console.error('Failed to rematch:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })

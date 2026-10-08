@@ -25,6 +25,7 @@ export default function Home() {
   // Room state
   const [room, setRoom] = useState(null)
   const [roomCode, setRoomCode] = useState(null)
+  const [urlRoomCode, setUrlRoomCode] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
   const [joinError, setJoinError] = useState('')
@@ -35,6 +36,7 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false)
   const countdownIntervalRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const missedPollsRef = useRef(0)
   const lastNitroWpmRef = useRef(0)
   const hasPlayedVictoryRef = useRef(false)
 
@@ -78,10 +80,9 @@ export default function Home() {
     // Check if URL has ?room=CODE or ?join=CODE
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      const codeFromUrl = params.get('room') || params.get('join')
+      const codeFromUrl = (params.get('room') || params.get('join') || '').trim().toUpperCase()
       if (codeFromUrl) {
-        // Auto-fill or prompt join in lobby
-        setJoinError(`Ready to join room ${codeFromUrl.toUpperCase()}! Click JOIN to enter.`)
+        setUrlRoomCode(codeFromUrl)
       }
     }
   }, [])
@@ -114,16 +115,26 @@ export default function Home() {
   // --- ROOM POLLING LOOP ---
   const fetchRoomState = useCallback(async (code) => {
     if (!code) return
+    const clean = String(code).trim().toUpperCase()
     try {
-      const res = await fetch(`/api/rooms/${code}`)
+      const res = await fetch(`/api/rooms/${clean}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      })
       if (!res.ok) {
         if (res.status === 404) {
-          setJoinError('Room expired or was closed.')
-          setRoom(null)
-          setRoomCode(null)
+          missedPollsRef.current += 1
+          // Only eject after 3 consecutive 404s to tolerate hot-reloads and network blips
+          if (missedPollsRef.current >= 3) {
+            setJoinError('Room expired or was closed.')
+            setRoom(null)
+            setRoomCode(null)
+            missedPollsRef.current = 0
+          }
         }
         return
       }
+      missedPollsRef.current = 0
       const data = await res.json()
       if (data.room) {
         setRoom(data.room)
@@ -515,6 +526,7 @@ export default function Home() {
             isCreating={isCreating}
             isJoining={isJoining}
             joinError={joinError}
+            initialJoinCode={urlRoomCode}
           />
         )}
 

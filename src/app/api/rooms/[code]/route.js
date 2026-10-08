@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server'
 import { getRoom, removePlayer, setPlayerReady } from '@/lib/roomStore'
 
+
 export async function GET(request, { params }) {
   try {
     const { code } = await params
     const room = getRoom(code)
 
     if (!room) {
-      return NextResponse.json({ success: false, error: 'Room not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Room not found' },
+        {
+          status: 404,
+          headers: { 'Cache-Control': 'no-store, max-age=0' },
+        }
+      )
     }
 
-    return NextResponse.json({ success: true, room })
+    return NextResponse.json(
+      { success: true, room },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    )
   } catch (error) {
     console.error('Failed to get room:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })

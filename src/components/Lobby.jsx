@@ -15,12 +15,13 @@ export default function Lobby({
   isCreating,
   isJoining,
   joinError,
+  initialJoinCode = '',
 }) {
   // 'solo' | 'friends'
   const [primaryMode, setPrimaryMode] = useState('friends')
   // 'create' | 'join' (inside friends mode)
-  const [friendTab, setFriendTab] = useState('create')
-  const [joinCode, setJoinCode] = useState('')
+  const [friendTab, setFriendTab] = useState(initialJoinCode ? 'join' : 'create')
+  const [joinCode, setJoinCode] = useState(initialJoinCode || '')
   const [difficulty, setDifficulty] = useState('Medium')
 
   // Find selected car object
@@ -40,6 +41,27 @@ export default function Lobby({
 
   return (
     <div className="lobby-wrapper">
+      {/* DIRECT CHALLENGE INVITE ALERT (When friend opens ?room=CODE) */}
+      {initialJoinCode && (
+        <div className="invite-challenge-banner">
+          <div className="icb-left">
+            <span className="icb-icon">🏁</span>
+            <div className="icb-text">
+              <strong>CHALLENGE INVITE DETECTED: ROOM {initialJoinCode}</strong>
+              <span>You're invited to race against your friend! Click Join to enter the starting grid.</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="icb-join-btn"
+            onClick={() => onJoinRoom(initialJoinCode)}
+            disabled={isJoining}
+          >
+            {isJoining ? 'Entering Grid...' : `⚡ Join Room ${initialJoinCode}`}
+          </button>
+        </div>
+      )}
+
       {/* THE FASTEST FINGERS WIN - HERO SECTION (Matching Landing Page) */}
       <section className="fastest-hero-section">
         {/* Left Column: Hero Copy & Actions */}

@@ -1,22 +1,63 @@
+import os from 'os'
+import fs from 'fs'
+import path from 'path'
 import { getRandomQuote } from './quotes'
 import { getRandomCar, CARS } from './cars'
 
-// Global singleton map to survive hot-reloads and container reuse
+// 1. In-memory global Map for fast sub-millisecond lookups
 if (!globalThis._typeClashRooms) {
   globalThis._typeClashRooms = new Map()
 }
+const memoryRooms = globalThis._typeClashRooms
 
-const rooms = globalThis._typeClashRooms
+// 2. Persistent disk cache in writable temp directory (safe for Windows, Linux, Vercel /tmp)
+const CACHE_FILE = path.join(os.tmpdir(), 'typeclash-rooms-cache.json')
 
-// Clean up stale rooms older than 2 hours
+function loadRoomsFromDisk() {
+  try {
+    if (fs.existsSync(CACHE_FILE)) {
+      const data = fs.readFileSync(CACHE_FILE, 'utf-8')
+      if (data) {
+        const parsed = JSON.parse(data)
+        for (const [code, r] of Object.entries(parsed)) {
+          if (!memoryRooms.has(code)) {
+            memoryRooms.set(code, r)
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Non-blocking disk warning
+  }
+}
+
+function saveRoomsToDisk() {
+  try {
+    const obj = {}
+    for (const [code, r] of memoryRooms.entries()) {
+      obj[code] = r
+    }
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(obj), 'utf-8')
+  } catch (e) {
+    // Non-blocking disk warning
+  }
+}
+
+// Initial hydration from disk
+loadRoomsFromDisk()
+
+// Clean up stale rooms older than 3 hours
 const cleanStaleRooms = () => {
   const now = Date.now()
-  const TWO_HOURS = 2 * 60 * 60 * 1000
-  for (const [code, room] of rooms.entries()) {
-    if (now - room.updatedAt > TWO_HOURS) {
-      rooms.delete(code)
+  const THREE_HOURS = 3 * 60 * 60 * 1000
+  let changed = false
+  for (const [code, room] of memoryRooms.entries()) {
+    if (now - (room.updatedAt || room.createdAt || 0) > THREE_HOURS) {
+      memoryRooms.delete(code)
+      changed = true
     }
   }
+  if (changed) saveRoomsToDisk()
 }
 
 // Generate human-friendly 5-letter race codes
@@ -29,11 +70,16 @@ const generateRoomCode = () => {
   return code
 }
 
+// Normalize code helper
+const normalizeCode = (code) => {
+  return String(code || '').trim().toUpperCase()
+}
+
 export const createRoom = ({ hostName, carId, quoteDifficulty, quoteId }) => {
   cleanStaleRooms()
 
   let code = generateRoomCode()
-  while (rooms.has(code)) {
+  while (memoryRooms.has(code)) {
     code = generateRoomCode()
   }
 
@@ -42,7 +88,7 @@ export const createRoom = ({ hostName, carId, quoteDifficulty, quoteId }) => {
 
   const hostPlayer = {
     id: 'host_' + Math.random().toString(36).substring(2, 9),
-    name: hostName || 'Racer 1',
+    name: (hostName || '').trim() || 'Racer 1',
     isHost: true,
     car: hostCar,
     isReady: true,
@@ -67,22 +113,35 @@ export const createRoom = ({ hostName, carId, quoteDifficulty, quoteId }) => {
     updatedAt: Date.now(),
   }
 
-  rooms.set(code, room)
+  memoryRooms.set(code, room)
+  saveRoomsToDisk()
+
   return { room, hostPlayer }
 }
 
 export const getRoom = (code) => {
-  if (!code) return null
-  const room = rooms.get(code.toUpperCase())
+  const clean = normalizeCode(code)
+  if (!clean) return null
+
+  // 1. Try memory
+  let room = memoryRooms.get(clean)
+
+  // 2. If not in memory, re-hydrate from disk
+  if (!room) {
+    loadRoomsFromDisk()
+    room = memoryRooms.get(clean)
+  }
+
   if (!room) return null
 
-  // Process Bot updates if race is active
+  // Process Bot & Status updates if race is active
   simulateBots(room)
   return room
 }
 
 export const joinRoom = (code, { playerName, carId }) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return { error: 'Room not found' }
   if (room.status === 'racing') return { error: 'Race is already in progress' }
   if (room.players.length >= 8) return { error: 'Room is full (max 8 racers)' }
@@ -90,7 +149,7 @@ export const joinRoom = (code, { playerName, carId }) => {
   const playerCar = CARS.find((c) => c.id === carId) || getRandomCar()
   const player = {
     id: 'player_' + Math.random().toString(36).substring(2, 9),
-    name: playerName || `Racer ${room.players.length + 1}`,
+    name: (playerName || '').trim() || `Racer ${room.players.length + 1}`,
     isHost: false,
     car: playerCar,
     isReady: false,
@@ -105,11 +164,15 @@ export const joinRoom = (code, { playerName, carId }) => {
 
   room.players.push(player)
   room.updatedAt = Date.now()
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
+
   return { room, player }
 }
 
 export const addBotToRoom = (code, botSpeed = 'medium') => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
   if (room.players.length >= 8) return null
 
@@ -139,16 +202,21 @@ export const addBotToRoom = (code, botSpeed = 'medium') => {
 
   room.players.push(bot)
   room.updatedAt = Date.now()
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
+
   return room
 }
 
 export const removePlayer = (code, playerId) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
 
   room.players = room.players.filter((p) => p.id !== playerId)
   if (room.players.length === 0) {
-    rooms.delete(code)
+    memoryRooms.delete(clean)
+    saveRoomsToDisk()
     return null
   }
 
@@ -159,23 +227,30 @@ export const removePlayer = (code, playerId) => {
   }
 
   room.updatedAt = Date.now()
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
+
   return room
 }
 
 export const setPlayerReady = (code, playerId, isReady) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
 
   const player = room.players.find((p) => p.id === playerId)
   if (player) {
     player.isReady = isReady
     room.updatedAt = Date.now()
+    memoryRooms.set(clean, room)
+    saveRoomsToDisk()
   }
   return room
 }
 
 export const startRaceCountdown = (code) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
 
   room.status = 'countdown'
@@ -183,11 +258,15 @@ export const startRaceCountdown = (code) => {
   // 3.5 seconds countdown then race starts
   room.raceStart = Date.now() + 3500
   room.updatedAt = Date.now()
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
+
   return room
 }
 
 export const updatePlayerProgress = (code, { playerId, progress, wpm, accuracy, finished }) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
 
   const player = room.players.find((p) => p.id === playerId)
@@ -213,11 +292,15 @@ export const updatePlayerProgress = (code, { playerId, progress, wpm, accuracy, 
   }
 
   room.updatedAt = Date.now()
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
+
   return room
 }
 
 export const rematchRoom = (code) => {
-  const room = getRoom(code)
+  const clean = normalizeCode(code)
+  const room = getRoom(clean)
   if (!room) return null
 
   room.quote = getRandomQuote()
@@ -236,6 +319,9 @@ export const rematchRoom = (code) => {
     p.rank = null
     p.isReady = p.isBot ? true : p.isHost
   })
+
+  memoryRooms.set(clean, room)
+  saveRoomsToDisk()
 
   return room
 }
