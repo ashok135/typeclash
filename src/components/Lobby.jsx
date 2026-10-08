@@ -40,22 +40,149 @@ export default function Lobby({
 
   return (
     <div className="lobby-wrapper">
-      {/* Hero Banner */}
-      <div className="lobby-hero">
-        <div className="hero-pill">
-          <span className="pill-dot"></span>
-          <span>HIGH-OCTANE MULTIPLAYER & SOLO TYPING RACE</span>
+      {/* THE FASTEST FINGERS WIN - HERO SECTION (Matching Landing Page) */}
+      <section className="fastest-hero-section">
+        {/* Left Column: Hero Copy & Actions */}
+        <div className="hero-left-content">
+          <div className="hero-pill-badge">
+            <span className="sparkle-icon">✨</span>
+            <span>Real-time multiplayer typing battles</span>
+          </div>
+
+          <h1 className="hero-huge-title">
+            The fastest<br />
+            <span className="hero-gradient-text">fingers win.</span>
+          </h1>
+
+          <p className="hero-description">
+            Race opponents live in head-to-head typing duels. Climb the ranks, unlock achievements, and prove your speed with sub-100ms sync.
+          </p>
+
+          <div className="hero-actions-row">
+            <button
+              type="button"
+              className="hero-play-btn"
+              onClick={() => onSoloPractice('medium')}
+              disabled={isCreating}
+            >
+              <span className="swords-icon">⚔️</span>
+              <span>{isCreating ? 'Starting Race...' : 'Play free now'}</span>
+              <span className="arrow-icon">›</span>
+            </button>
+
+            <button
+              type="button"
+              className="hero-secondary-btn"
+              onClick={() => {
+                const el = document.getElementById('racer-staging-bay')
+                if (el) el.scrollIntoView({ behavior: 'smooth' })
+              }}
+            >
+              <span className="trophy-icon">🏆</span>
+              <span>Race with Friends</span>
+            </button>
+          </div>
+
+          {/* Quick Stats Metrics Row */}
+          <div className="hero-stats-row">
+            <div className="stat-pill-item">
+              <span className="stat-icon">⚡</span>
+              <div className="stat-meta">
+                <strong className="stat-val">&lt;100ms</strong>
+                <span className="stat-sub">Avg latency</span>
+              </div>
+            </div>
+
+            <div className="stat-pill-item">
+              <span className="stat-icon">🤖</span>
+              <div className="stat-meta">
+                <strong className="stat-val">6 levels</strong>
+                <span className="stat-sub">AI tiers</span>
+              </div>
+            </div>
+
+            <div className="stat-pill-item">
+              <span className="stat-icon">🏆</span>
+              <div className="stat-meta">
+                <strong className="stat-val">11+</strong>
+                <span className="stat-sub">Achievements</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <h1 className="hero-title">
-          TYPE FAST. <span>RACE LIVE.</span> WIN GLORY.
-        </h1>
-        <p className="hero-subtitle">
-          Battle friends on real-time multi-lane racetracks or sharpen your WPM in solo practice against adaptive AI racers.
-        </p>
-      </div>
+
+        {/* Right Column: Live Match Preview Card */}
+        <div className="hero-right-preview">
+          <div className="match-preview-card">
+            <div className="preview-window-bar">
+              <div className="mac-dots">
+                <span className="mac-dot red"></span>
+                <span className="mac-dot yellow"></span>
+                <span className="mac-dot green"></span>
+              </div>
+              <div className="live-match-indicator">
+                <span className="live-pulsing-dot"></span>
+                <span>live match</span>
+              </div>
+            </div>
+
+            {/* Dual Racer Duel Bars */}
+            <div className="preview-racers-row">
+              <div className="preview-racer-pod you-pod">
+                <div className="pod-header">
+                  <span className="pod-name">You</span>
+                  <span className="pod-wpm">92 <small>wpm</small></span>
+                </div>
+                <div className="pod-bar-bg">
+                  <div className="pod-bar-fill you-fill" style={{ width: '78%' }}></div>
+                </div>
+              </div>
+
+              <div className="preview-racer-pod aria-pod">
+                <div className="pod-header">
+                  <span className="pod-name">Aria</span>
+                  <span className="pod-wpm">88 <small>wpm</small></span>
+                </div>
+                <div className="pod-bar-bg">
+                  <div className="pod-bar-fill aria-fill" style={{ width: '70%' }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Terminal Typing Excerpt Box */}
+            <div className="preview-text-box">
+              <p className="preview-quote-display">
+                <span className="typed-passed">The quick brown fox jumps over the lazy dog while the morni</span>
+                <span className="cursor-active">n</span>
+                <span className="untyped-letters">g sun paints the sky in shades of amber and violet.</span>
+              </p>
+            </div>
+
+            {/* Bottom 4 Metric Quadrants */}
+            <div className="preview-metrics-grid">
+              <div className="preview-metric-box">
+                <span className="pm-val">92</span>
+                <span className="pm-label">WPM</span>
+              </div>
+              <div className="preview-metric-box">
+                <span className="pm-val">460</span>
+                <span className="pm-label">CPM</span>
+              </div>
+              <div className="preview-metric-box">
+                <span className="pm-val">98%</span>
+                <span className="pm-label">ACC</span>
+              </div>
+              <div className="preview-metric-box">
+                <span className="pm-val">14s</span>
+                <span className="pm-label">TIME</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Main Grid: Left = Racer Customization, Right = Mode Selection */}
-      <div className="lobby-grid">
+      <div id="racer-staging-bay" className="lobby-grid">
         {/* LEFT COLUMN: RACER PROFILE & VEHICLE */}
         <div className="lobby-card player-setup-card">
           <div className="card-header">
